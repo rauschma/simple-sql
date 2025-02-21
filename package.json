@@ -1,0 +1,21 @@
+{
+  "name": "@rauschma/simple-sql",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "type": "module",
+  "scripts": {
+    "tsc": "tsc",
+    "test": "node --test"
+  },
+  "// scripts": {
+    "tsc": "Type-check the repository (no files are emitted)",
+    "test": "Find all *_test.ts files and run them"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.4"
+  }
+}
