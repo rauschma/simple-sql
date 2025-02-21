@@ -1,8 +1,8 @@
-# Experiment: simple type-safe access to `node:sqlite`
+# TypeScript experiment: simple type-safe access to `node:sqlite`
 
 I wondered what a tiny type-safe SQL library would look like:
 
-* My immediate use case is very simple: An app that doesn’t much more than insert table rows and select table rows (with simple search criteria).
+* My immediate use case is very simple: An app that doesn’t do much more than insert table rows and select table rows (with simple search criteria).
 * I wanted to write SQL – not use a JS API to write queries.
 * I wanted static safety for property names.
 
