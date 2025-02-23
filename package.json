@@ -15,7 +15,11 @@
     "test": "Find all *_test.ts files and run them"
   },
   "license": "MIT",
+  "// devDependencies": {
+    "asserttt": "Needed for testing"
+  },
   "devDependencies": {
-    "@types/node": "^22.13.4"
+    "@types/node": "^22.13.4",
+    "asserttt": "^0.2.0"
   }
 }

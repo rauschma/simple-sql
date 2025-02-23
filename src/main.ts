@@ -1,66 +1,109 @@
 import { DatabaseSync } from 'node:sqlite';
-import { DatabaseTable } from './db.ts';
-import { ArrayType, UnionType, type TypeRecordToType } from './type-record.ts';
+import { DatabaseTable } from './database.ts';
+import { sql } from './sql-template-tag.ts';
+import { createColEnum, type SqlTypeMap, type SqlTypeMapToSqlObj } from './sql-type-map.ts';
+import { pick } from './util.ts';
 
-const htmlPageTypeRecord = {
-  inputPath: 'string',
-  fileSetId: 'string',
-  dateTimeCreated: UnionType('string', 'null'),
-  tags: ArrayType('string'),
-} as const;
-type HtmlPage = TypeRecordToType<typeof htmlPageTypeRecord>;
-const htmlPageSqlTypes: Record<keyof HtmlPage, string> = {
+const pageSqlTypes = {
   inputPath: 'TEXT NOT NULL PRIMARY KEY',
-  fileSetId: 'TEXT NOT NULL',
-  dateTimeCreated: 'TEXT',
+  fileSetId: 'TEXT NOT NULL', // 'post' | 'solo'
+  updatedDateTime: 'TEXT',
+  updatedYear: 'TEXT',
   tags: 'TEXT NOT NULL',
-};
+} as const satisfies SqlTypeMap;
+
+/**
+ * Type-safe access to the column names defined via
+ * {@link pageSqlTypes}
+ */
+const Col = createColEnum(pageSqlTypes);
+
+/** An SqlTypeMap can be converted to a type */
+type _PageSql = SqlTypeMapToSqlObj<typeof pageSqlTypes>;
 
 function main() {
-  const db = new DatabaseTable({
-    db: new DatabaseSync(':memory:'),
+  const db = new DatabaseSync(':memory:');
+  const table = new DatabaseTable({
+    db,
     tableName: 'pages',
-    typeRecord: htmlPageTypeRecord,
-    sqlTypes: htmlPageSqlTypes,
-    jsToSql: (js) => ({
-      fileSetId: js.fileSetId,
-      inputPath: js.inputPath,
-      dateTimeCreated: js.dateTimeCreated,
-      tags: js.tags.join(','),
-    }),
-    sqlToJs: (sql) => (
-      {
-        fileSetId: sql.fileSetId,
-        inputPath: sql.inputPath,
-        dateTimeCreated: sql.dateTimeCreated,
-        tags: sql.tags.split(','),
-      } satisfies HtmlPage
-    ),
+    sqlTypeMap: pageSqlTypes,
+    logSql: true,
   });
 
-  db.createTable();
-  const insert = db.insert();
+  table.createTable();
+  const insert = table.replace();
   insert.run({
     fileSetId: 'post',
     inputPath: '2017/01/intro.md',
-    dateTimeCreated: '2017-01-13',
-    tags: ['dev', 'typescript'],  
+    updatedDateTime: '2017-01-13',
+    updatedYear: '2017',
+    tags: 'dev,typescript',
   });
   insert.run({
     fileSetId: 'post',
     inputPath: '2017/01/more.md',
-    dateTimeCreated: '2017-01-15',
-    tags: ['dev', 'typescript'],  
+    updatedDateTime: '2017-01-15',
+    updatedYear: '2017',
+    tags: 'dev,typescript',  
   });
   insert.run({
-    fileSetId: 'page',
+    fileSetId: 'solo',
     inputPath: 'p/about.md',
-    dateTimeCreated: '2017-01-15',
-    tags: [],
+    updatedDateTime: '2017-01-15',
+    updatedYear: '2017',
+    tags: '',
   });
-  const select = db.select({fileSetId: 'post'}, {dateTimeCreated: 'DESC'});
-  for (const obj of select.all()) {
-    console.log(obj);
+
+  {
+    const select = table.select(
+      '*',
+      sql`
+        WHERE ${Col.fileSetId} = ${'post'}
+        ORDER BY ${Col.updatedDateTime} DESC
+      `
+    );
+    for (const obj of select.all()) {
+      console.log(obj);
+    }
+  }
+  {
+    const inputPaths = pick(pageSqlTypes, 'inputPath');
+    const select = table.select(
+      inputPaths
+    );
+    for (const obj of select.all()) {
+      console.log(obj);
+    }
+  }
+  {
+    const inputPaths = {
+      'COUNT(*)': 'INTEGER',
+    } as const satisfies SqlTypeMap;
+    const select = table.select(
+      inputPaths
+    );
+    for (const obj of select.all()) {
+      console.log(obj);
+    }
+  }
+  {
+    const yearMaxUpdated = {
+      [Col.updatedYear.name]: 'TEXT',
+      [`max(${Col.updatedDateTime.name})`]: 'TEXT',
+    } as const satisfies SqlTypeMap;
+    const select = table.select(
+      yearMaxUpdated,
+      sql`
+        WHERE ${Col.fileSetId} = ${'post'}
+              AND ${Col.updatedDateTime} IS NOT NULL
+              AND ${Col.updatedYear} IS NOT NULL
+        GROUP BY ${Col.updatedYear}
+        ORDER BY ${Col.updatedYear} DESC
+      `
+    );
+    for (const obj of select.all()) {
+      console.log(obj);
+    }
   }
 }
 
