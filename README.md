@@ -80,6 +80,8 @@ const inputPaths = pick(pageSqlTypes, 'inputPath');
 const select = table.select(inputPaths);
 ```
 
+**More examples:** See [`src/main.ts`](https://github.com/rauschma/simple-sql/blob/main/src/main.ts).
+
 ## Installation
 
 Only needed if you want to edit the code (this project only has dev dependencies):
