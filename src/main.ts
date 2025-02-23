@@ -23,15 +23,15 @@ type _PageSql = SqlTypeMapToSqlObj<typeof pageSqlTypes>;
 
 function main() {
   const db = new DatabaseSync(':memory:');
-  const table = new DatabaseTable({
+  const pagesTable = new DatabaseTable({
     db,
     tableName: 'pages',
     sqlTypeMap: pageSqlTypes,
     logSql: true,
   });
 
-  table.createTable();
-  const insert = table.replace();
+  pagesTable.createTable();
+  const insert = pagesTable.replace();
   insert.run({
     fileSetId: 'post',
     inputPath: '2017/01/intro.md',
@@ -55,7 +55,7 @@ function main() {
   });
 
   {
-    const select = table.select(
+    const select = pagesTable.select(
       '*',
       sql`
         WHERE ${Col.fileSetId} = ${'post'}
@@ -67,32 +67,28 @@ function main() {
     }
   }
   {
-    const inputPaths = pick(pageSqlTypes, 'inputPath');
-    const select = table.select(
-      inputPaths
-    );
+    const inputPathSqlTypes = pick(pageSqlTypes, 'inputPath');
+    const select = pagesTable.select(inputPathSqlTypes);
     for (const obj of select.all()) {
       console.log(obj);
     }
   }
   {
-    const inputPaths = {
+    const countStarSqlTypes = {
       'COUNT(*)': 'INTEGER',
     } as const satisfies SqlTypeMap;
-    const select = table.select(
-      inputPaths
-    );
+    const select = pagesTable.select(countStarSqlTypes);
     for (const obj of select.all()) {
       console.log(obj);
     }
   }
   {
-    const yearMaxUpdated = {
+    const yearMaxUpdatedSqlTypes = {
       [Col.updatedYear.name]: 'TEXT',
       [`max(${Col.updatedDateTime.name})`]: 'TEXT',
     } as const satisfies SqlTypeMap;
-    const select = table.select(
-      yearMaxUpdated,
+    const select = pagesTable.select(
+      yearMaxUpdatedSqlTypes,
       sql`
         WHERE ${Col.fileSetId} = ${'post'}
               AND ${Col.updatedDateTime} IS NOT NULL

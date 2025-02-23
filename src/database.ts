@@ -28,6 +28,12 @@ export class DatabaseTable<
     this.#propKeys = Object.keys(sqlTypeMap);
     this.#logSql = logSql;
   }
+  #maybeLogSql(sql: string) {
+    if (this.#logSql) {
+      console.log();
+      console.log(sql);
+    }
+  }
 
   createTable(): void {
     const sql = [
@@ -40,9 +46,7 @@ export class DatabaseTable<
       ,
       `)`,
     ].join('\n');
-    if (this.#logSql) {
-      console.log(sql);
-    }
+    this.#maybeLogSql(sql);
     this.#db.exec(sql);
   }
 
@@ -54,9 +58,7 @@ export class DatabaseTable<
       sql += sqlValues.sqlStr;
       values = sqlValues.values;
     }
-    if (this.#logSql) {
-      console.log(sql);
-    }
+    this.#maybeLogSql(sql);
     this.#db.exec(sql);
   }
 
@@ -77,9 +79,7 @@ export class DatabaseTable<
       sql += sqlValues.sqlStr;
       values = sqlValues.values;
     }
-    if (this.#logSql) {
-      console.log(sql);
-    }
+    this.#maybeLogSql(sql);
     const select = this.#db.prepare(sql);
     select.setReadBigInts(true);
     return {
@@ -93,9 +93,7 @@ export class DatabaseTable<
     const sql = (
       `REPLACE INTO ${this.#tableName} (${this.#propKeys.join(', ')}) VALUES (${$propKeys.join(', ')})`
     );
-    if (this.#logSql) {
-      console.log(sql);
-    }
+    this.#maybeLogSql(sql);
     const insert = this.#db.prepare(sql);
     return {
       run(sqlObj: SO): StatementResultingChanges {

@@ -12,7 +12,7 @@
 #3 and #4 are supported via the template tag `sql`:
 
 ```ts
-const select = table.select(
+const select = pagesTable.select(
   '*',
   sql`
     WHERE ${Col.fileSetId} = ${'post'}
@@ -34,7 +34,8 @@ ORDER BY updatedDateTime DESC
 
 ## Using the API
 
-Define an “SQL type map” for a table:
+* Define the _SQL type map_ `pageSqlTypes` for a table.
+* Automatically derive the enum object `Col` with column names.
 
 ```ts
 const pageSqlTypes = {
@@ -47,11 +48,11 @@ const pageSqlTypes = {
 const Col = createColEnum(pageSqlTypes);
 ```
 
-Create a wrapper for a table – whose contents are specified via `pageSqlTypes` (line A):
+Create a wrapper for table `pages` – whose columns are specified via `pageSqlTypes` (line A):
 
 ```ts
 const db = new DatabaseSync(':memory:');
-const table = new DatabaseTable({
+const pagesTable = new DatabaseTable({
   db,
   tableName: 'pages',
   sqlTypeMap: pageSqlTypes, // (A)
@@ -61,7 +62,7 @@ const table = new DatabaseTable({
 Query the table:
 
 ```ts
-const select = table.select(
+const select = pagesTable.select(
   '*',
   sql`
     WHERE ${Col.fileSetId} = ${'post'}
@@ -76,8 +77,8 @@ for (const obj of select.all()) {
 We can also query a subset of all columns – which is again defined via an SQL type map:
 
 ```ts
-const inputPaths = pick(pageSqlTypes, 'inputPath');
-const select = table.select(inputPaths);
+const inputPathSqlTypes = pick(pageSqlTypes, 'inputPath');
+const select = pagesTable.select(inputPathSqlTypes);
 ```
 
 **More examples:** See [`src/main.ts`](https://github.com/rauschma/simple-sql/blob/main/src/main.ts).
