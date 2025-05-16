@@ -77,7 +77,7 @@ for (const obj of select.all()) {
 We can also query a subset of all columns – which is again defined via an SQL type map:
 
 ```ts
-const inputPathSqlTypes = pick(pageSqlTypes, 'inputPath');
+const inputPathSqlTypes = pickProps(pageSqlTypes, 'inputPath');
 const select = pagesTable.select(inputPathSqlTypes);
 ```
 

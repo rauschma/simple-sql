@@ -1,5 +1,5 @@
 import type { DatabaseSync, StatementResultingChanges, SupportedValueType } from 'node:sqlite';
-import type { SqlValues } from './sql-template-tag.ts';
+import { LINE_TERMINATOR, type SqlFragment } from './sql-template-tag.ts';
 import { type SqlTypeMap, type SqlTypeMapToSqlObj } from './sql-type-map.ts';
 
 type DatabaseTableProps<STM extends SqlTypeMap> = {
@@ -50,13 +50,13 @@ export class DatabaseTable<
     this.#db.exec(sql);
   }
 
-  delete(sqlValues: SqlValues): void {
+  delete(sqlFragment: SqlFragment): void {
     let sql = `DELETE FROM ${this.#tableName}`;
     let values: Array<SupportedValueType> = [];
-    if (sqlValues) {
-      sql += sqlValues.lineTerminator;
-      sql += sqlValues.sqlStr;
-      values = sqlValues.values;
+    if (sqlFragment) {
+      sql += LINE_TERMINATOR;
+      sql += sqlFragment.sqlStr;
+      values = sqlFragment.values;
     }
     this.#maybeLogSql(sql);
     this.#db.exec(sql);
@@ -68,16 +68,16 @@ export class DatabaseTable<
     SqlObj = SqlTypeMapToSqlObj<S>,
   >(
     sqlTypeMapOpt: SOpt,
-    sqlValues?: SqlValues,
+    sqlFragment?: SqlFragment,
   ): SelectResult<SqlObj> {
     const sqlTypeMap = sqlTypeMapOpt === '*' ? this.#sqlTypeMap : sqlTypeMapOpt;
 
     let sql = `SELECT ${Object.keys(sqlTypeMap).join(', ')} FROM ${this.#tableName}`;
     let values: Array<SupportedValueType> = [];
-    if (sqlValues) {
-      sql += sqlValues.lineTerminator;
-      sql += sqlValues.sqlStr;
-      values = sqlValues.values;
+    if (sqlFragment) {
+      sql += LINE_TERMINATOR;
+      sql += sqlFragment.sqlStr;
+      values = sqlFragment.values;
     }
     this.#maybeLogSql(sql);
     const select = this.#db.prepare(sql);

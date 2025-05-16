@@ -1,8 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
-import { DatabaseTable } from './database.ts';
+import { DatabaseTable } from './database-table.ts';
 import { sql } from './sql-template-tag.ts';
-import { createColEnum, type SqlTypeMap, type SqlTypeMapToSqlObj } from './sql-type-map.ts';
-import { pick } from './util.ts';
+import { createColEnum, pickProps, type SqlTypeMap, type SqlTypeMapToSqlObj } from './sql-type-map.ts';
 
 const pageSqlTypes = {
   inputPath: 'TEXT NOT NULL PRIMARY KEY',
@@ -18,7 +17,10 @@ const pageSqlTypes = {
  */
 const Col = createColEnum(pageSqlTypes);
 
-/** An SqlTypeMap can be converted to a type */
+/**
+ * - An SqlTypeMap can be converted to a type.
+ * - databaseTable.select() uses that to return typed results.
+ */
 type _PageSql = SqlTypeMapToSqlObj<typeof pageSqlTypes>;
 
 function main() {
@@ -31,22 +33,22 @@ function main() {
   });
 
   pagesTable.createTable();
-  const insert = pagesTable.replace();
-  insert.run({
+  const replace = pagesTable.replace();
+  replace.run({
     fileSetId: 'post',
     inputPath: '2017/01/intro.md',
     updatedDateTime: '2017-01-13',
     updatedYear: '2017',
     tags: 'dev,typescript',
   });
-  insert.run({
+  replace.run({
     fileSetId: 'post',
     inputPath: '2017/01/more.md',
     updatedDateTime: '2017-01-15',
     updatedYear: '2017',
     tags: 'dev,typescript',  
   });
-  insert.run({
+  replace.run({
     fileSetId: 'solo',
     inputPath: 'p/about.md',
     updatedDateTime: '2017-01-15',
@@ -67,7 +69,7 @@ function main() {
     }
   }
   {
-    const inputPathSqlTypes = pick(pageSqlTypes, 'inputPath');
+    const inputPathSqlTypes = pickProps(pageSqlTypes, 'inputPath');
     const select = pagesTable.select(inputPathSqlTypes);
     for (const obj of select.all()) {
       console.log(obj);
